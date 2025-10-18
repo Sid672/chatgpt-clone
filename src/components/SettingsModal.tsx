@@ -6,11 +6,13 @@ type Props = {
   onClose: () => void;
   model: string;
   setModel: (m: string) => void;
+  saveMemory?: boolean;
+  setSaveMemory?: (v: boolean) => void;
 };
 
 const MODELS = ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini"];
 
-export default function SettingsModal({ open, onClose, model, setModel }: Props) {
+export default function SettingsModal({ open, onClose, model, setModel, saveMemory, setSaveMemory }: Props) {
   useEffect(() => {
     function onEsc(e: KeyboardEvent) {
       if (e.key === "Escape") onClose();
@@ -41,6 +43,12 @@ export default function SettingsModal({ open, onClose, model, setModel }: Props)
             </option>
           ))}
         </select>
+        <div className="mt-3">
+          <label className="flex items-center gap-2">
+            <input type="checkbox" checked={!!saveMemory} onChange={(e) => setSaveMemory?.(e.target.checked)} />
+            <span className="text-sm">Save memory (store short facts from conversation)</span>
+          </label>
+        </div>
       </div>
     </div>
   );
