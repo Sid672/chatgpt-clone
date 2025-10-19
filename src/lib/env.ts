@@ -11,6 +11,7 @@ const EnvSchema = z.object({
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
   CLOUDINARY_API_KEY: z.string().optional(),
   CLOUDINARY_API_SECRET: z.string().optional(),
+  PERSIST_SECRET: z.string().optional(),
 });
 
 const raw = {
@@ -20,6 +21,7 @@ const raw = {
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
   CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
   CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+  PERSIST_SECRET: process.env.PERSIST_SECRET,
 };
 
 // Use safeParse to avoid throwing during import; endpoints will assert required vars when needed.

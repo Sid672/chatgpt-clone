@@ -94,7 +94,7 @@ export default function Home() {
           ))}
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center text-center mt-24">
-              <div className="text-3xl md:text-5xl font-semibold mb-6">What can I help with?</div>
+              <div className="text-[28px] font-semibold mb-6">What can I help with?</div>
               <ChatInput onSend={() => {}} variant="hero" />
             </div>
           )}

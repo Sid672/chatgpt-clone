@@ -20,6 +20,12 @@ body, html {
   color: var(--foreground);
   -webkit-font-smoothing: antialiased;
   font-size: 1.05rem;
+  font-family: 'Inter', 'Helvetica Neue', Arial, ui-sans-serif, system-ui, sans-serif;
+}
+
+code, pre, .prose code, .prose pre, .cm-s-default, .cm-editor, .cm-content {
+  font-family: 'JetBrains Mono', Menlo, Consolas, 'Liberation Mono', monospace;
+  font-size: 1rem;
 }
 
 .theme-dark {

@@ -18,9 +18,9 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "invalid signature" }, { status: 401 });
     }
     // parse after verifying signature
-    const payload = JSON.parse(raw);
+    JSON.parse(raw);
     return NextResponse.json({ ok: true });
-  } catch (e) {
+  } catch {
     return NextResponse.json({ error: "invalid" }, { status: 400 });
   }
 }

@@ -2,10 +2,10 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Conversation } from "@/models/Conversation";
 
-export async function PATCH(
-  req: NextRequest,
-  { params }: { params: { id: string } }
-) {
+type RouteContext = { params: { id: string } } | { params: Promise<{ id: string }> };
+
+export async function PATCH(req: NextRequest, context: RouteContext) {
+  const params = (await Promise.resolve(context.params as Promise<{ id: string }> | { id: string })) as { id?: string } | undefined;
   if (!process.env.MONGODB_URI) {
     return NextResponse.json({ error: "Persistence disabled" }, { status: 501 });
   }
@@ -13,8 +13,10 @@ export async function PATCH(
   const body = (await req.json().catch(() => ({}))) as { title?: string };
   const title: string | undefined = body?.title;
   if (!title) return NextResponse.json({ error: "title required" }, { status: 400 });
+  const id = params?.id;
+  if (!id) return NextResponse.json({ error: "missing id" }, { status: 400 });
   const updated = await Conversation.findByIdAndUpdate(
-    params.id,
+    id,
     { title },
     { new: true }
   ).lean();

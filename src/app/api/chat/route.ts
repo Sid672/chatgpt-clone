@@ -2,9 +2,8 @@ import { NextRequest } from "next/server";
 import { createOpenAI } from "@ai-sdk/openai";
 import { streamText } from "ai";
 import { connectToDatabase } from "@/lib/db";
-import { Message } from "@/models/Message";
 import { Memory } from "@/models/Memory";
-import { env, assertServerEnvForChat } from "@/lib/env";
+import { env } from "@/lib/env";
 import { trimMessagesToTokenLimit } from "@/lib/tokens";
 
 const openai = createOpenAI({ apiKey: env.OPENAI_API_KEY as string | undefined });
@@ -33,11 +32,11 @@ export async function POST(req: NextRequest) {
   if (conversationId) {
     try {
       await connectToDatabase();
-      const mems = await Memory.find({ conversationId }).sort({ createdAt: -1 }).limit(10).lean();
+      const mems = (await Memory.find({ conversationId }).sort({ createdAt: -1 }).limit(10).lean()) as { content: string }[];
       memoryMessages = mems.map((m) => ({ role: "system", content: m.content }));
-    } catch (e) {
-      // ignore memory load errors
-      console.warn("Memory load error", e);
+    } catch (err) {
+      // ignore memory load errors (log for debugging)
+      console.warn("Memory load error", err);
     }
   }
 
@@ -62,27 +61,23 @@ export async function POST(req: NextRequest) {
     messages: trimmed as any,
   });
 
-  // Best-effort persistence (not on Edge runtime path). Use Webhooks/Background in production.
+  // Best-effort persistence: call a serverful endpoint to avoid DB work on the Edge runtime
+  // Best-effort persistence: call a serverful endpoint to avoid DB work on the Edge runtime
   void (async () => {
-    try {
-      await connectToDatabase();
-      const docs = messages.map((m: { role: string; content: string }) => ({
-        conversationId: conversationId || "default",
-        role: m.role,
-        content: m.content,
-      }));
-      if (docs.length) await Message.insertMany(docs);
-
-      // Persist a short memory entry if requested (e.g., last assistant reply)
-      if (saveMemory) {
-        const lastAssistant = docs.slice().reverse().find((d) => d.role === "assistant");
-        if (lastAssistant) {
-          await Memory.create({ conversationId: conversationId || "default", content: lastAssistant.content });
-        }
+    const url = new URL("/api/persist", req.url).toString();
+    const payload = JSON.stringify({ conversationId, messages, saveMemory });
+    const headers = { "Content-Type": "application/json", "x-internal-secret": env.PERSIST_SECRET ?? "" };
+    // retry a couple times with exponential backoff
+    for (let attempt = 0; attempt < 3; attempt++) {
+      try {
+        const res = await fetch(url, { method: "POST", headers, body: payload });
+        if (res.ok) break;
+      } catch (err) {
+        // continue to retry; log for observability
+        console.warn("persist fetch error", err);
       }
-    } catch (err) {
-      // ignore persistence errors to avoid affecting streaming
-      console.warn("Persistence error", err);
+      // backoff
+      await new Promise((r) => setTimeout(r, 100 * Math.pow(2, attempt)));
     }
   })();
 
