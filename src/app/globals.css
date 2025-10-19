@@ -67,7 +67,7 @@ html {
   border-radius: var(--btn-radius);
   color: var(--btn-fg);
   background: var(--btn-bg);
-  border: 1px solid var(--btn-border);
+  border: none;
   font-size: 0.875rem;
 }
 
@@ -79,7 +79,7 @@ html {
   padding: 0.35rem;
   border-radius: var(--btn-radius);
   background: var(--btn-ghost-bg);
-  border: 1px solid transparent;
+  border: none;
   color: var(--btn-fg);
 }
 
@@ -91,7 +91,7 @@ html {
   height: 36px;
   padding: 0;
   border-radius: 9999px;
-  border: 1px solid var(--btn-border);
+  border: none;
   background: var(--btn-bg);
   color: #FFFFFF;
 }
@@ -106,6 +106,24 @@ html {
   color: inherit;
 }
 
+/* Remove browser focus ring/border for the Ask anything input */
+.input-plain:focus,
+.input-plain:focus-visible,
+.input-plain:focus-within {
+  outline: none !important;
+  box-shadow: none !important;
+  border: none !important;
+}
+
+/* Prevent wrapper from adding any focus ring */
+.pill-input-wrapper:focus-within {
+  box-shadow: 0 1px 0 rgba(0,0,0,0.12) inset; /* keep subtle inset only */
+  border: none !important;
+}
+
+/* Remove tap highlight on buttons for a cleaner focus interaction */
+button { -webkit-tap-highlight-color: transparent; }
+
 .pill-input-wrapper {
   display: flex;
   align-items: center;
@@ -115,7 +133,7 @@ html {
   max-width: 820px;
   margin: 0 auto;
   background: #232323;
-  border: 1px solid var(--border);
+  border: none;
   padding: 14px 18px;
   border-radius: 999px;
   box-shadow: 0 1px 0 rgba(0,0,0,0.12) inset;
@@ -134,6 +152,10 @@ html {
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--btn-border);
+  border: none;
   background: #232323;
+}
+
+.voice-btn:hover {
+  background: var(--btn-hover-bg);
 }

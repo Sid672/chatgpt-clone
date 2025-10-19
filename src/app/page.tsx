@@ -69,11 +69,7 @@ export default function Home() {
           <div className="font-semibold text-lg tracking-tight select-none" style={{ fontFamily: 'var(--font-inter)', fontWeight: 600, letterSpacing: 0.1 }}>
             ChatGPT
           </div>
-          <button className="btn-icon bg-[#ececf1] hover:bg-[#dadbdd] dark:bg-[#353740] dark:hover:bg-[#444654] border-none shadow-none text-base" style={{ color: 'var(--foreground)' }}
-            onClick={() => setSettingsOpen(true)} aria-label="Settings">
-            <span className="sr-only">Open settings</span>
-            ⚙️
-          </button>
+          {/* Settings button removed per request */}
         </div>
         <div className="flex-1 overflow-y-auto p-2 md:p-4 space-y-1" role="log" aria-live="polite">
           {messages.map((m: { id: string; role: ChatRole; content: string }, idx: number) => (
@@ -94,7 +90,7 @@ export default function Home() {
           ))}
           {messages.length === 0 && (
             <div className="flex flex-col items-center justify-center text-center mt-24">
-              <div className="text-[28px] font-semibold mb-6">What can I help with?</div>
+              <div className="text-[28px] font-normal mb-6">What can I help with?</div>
               <ChatInput onSend={() => {}} variant="hero" />
             </div>
           )}

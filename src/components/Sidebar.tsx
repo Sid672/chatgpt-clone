@@ -1,6 +1,6 @@
 "use client";
 import { useState } from "react";
-import { NotebookPen, Search, Library, FolderOpen, Component } from 'lucide-react';
+import { NotebookPen, Search, Library, FolderOpen, Component, ChevronRight, ChevronLeft } from 'lucide-react';
 
 type Conversation = { id: string; title: string };
 
@@ -21,16 +21,27 @@ export default function Sidebar({ conversations = [], onNew, onSelect }: Props) 
     >
       {/* Branding and toggle row */}
       <div className="flex items-center justify-between px-3 pt-4 pb-2">
-        <div className="flex items-center">
-          <img src="/gpt-icon.webp" alt="GPT" width={32} height={32} />
+        <div className="flex items-center relative group">
+          <img src="/gpt-icon.webp" alt="GPT" width={20} height={20} className="transition group-hover:invert group-hover:brightness-100" />
+          {!open && (
+            <button
+              className="absolute -right-1 -top-1 bg-[#333] hover:bg-[#444] rounded-full p-1 opacity-0 group-hover:opacity-100 transition-all"
+              onClick={() => setOpen(true)}
+              aria-label="Open sidebar"
+            >
+              <ChevronRight size={20} color="white" />
+            </button>
+          )}
         </div>
-        <button
-          className="ml-auto btn-icon text-[#10a37f]"
-          onClick={() => setOpen(v => !v)}
-          aria-label="Toggle sidebar"
-        >
-          <svg width="22" height="22" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="5" y="5" width="12" height="12" rx="3" stroke="#10a37f" strokeWidth="2"/></svg>
-        </button>
+        {open && (
+          <button
+            className="ml-auto btn-icon text-white hover:text-gray-300"
+            onClick={() => setOpen(false)}
+            aria-label="Close sidebar"
+          >
+            <ChevronLeft size={20} />
+          </button>
+        )}
       </div>
 
       {/* Nav items */}
@@ -43,7 +54,7 @@ export default function Sidebar({ conversations = [], onNew, onSelect }: Props) 
               onClick={onNew}
               aria-label="New chat"
             >
-              <NotebookPen className="mr-3 flex-shrink-0" size={20} />
+              <NotebookPen className="mr-3 flex-shrink-0" size={14} />
               {open && <>
                 <span>New chat</span>
                 <span className="ml-auto bg-[#222] border border-[#333] rounded px-2 py-0.5 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
@@ -60,8 +71,11 @@ export default function Sidebar({ conversations = [], onNew, onSelect }: Props) 
               // Placeholder onClick for search
               onClick={() => {}}
             >
-              <Search className="mr-3 flex-shrink-0" size={20} />
-              {open && <span>Search chats</span>}
+              <Search className="mr-3 flex-shrink-0" size={14} />
+              {open && <> <span>Search chats</span>
+              <span className="ml-auto bg-[#222] border border-[#333] rounded px-2 py-0.5 text-xs text-gray-300 opacity-0 group-hover:opacity-100 transition whitespace-nowrap">
+              Ctrl + K
+            </span> </>}
             </button>
           </li>
 
@@ -71,7 +85,7 @@ export default function Sidebar({ conversations = [], onNew, onSelect }: Props) 
               className="flex items-center w-full px-2 py-2 rounded-lg hover:bg-[#232323] focus:bg-[#232323] transition font-medium text-[14px]"
               onClick={() => {}}
             >
-              <Library className="mr-3 flex-shrink-0" size={20} />
+              <Library className="mr-3 flex-shrink-0" size={14} />
               {open && <span>Library</span>}
             </button>
           </li>
@@ -82,7 +96,7 @@ export default function Sidebar({ conversations = [], onNew, onSelect }: Props) 
               className="flex items-center w-full px-2 py-2 rounded-lg hover:bg-[#232323] focus:bg-[#232323] transition font-medium text-[14px]"
               onClick={() => {}}
             >
-              <FolderOpen className="mr-3 flex-shrink-0" size={20} />
+              <FolderOpen className="mr-3 flex-shrink-0" size={14} />
               {open && <span>Projects</span>}
             </button>
           </li>
@@ -96,7 +110,7 @@ export default function Sidebar({ conversations = [], onNew, onSelect }: Props) 
               className="flex items-center w-full px-2 py-2 rounded-lg hover:bg-[#232323] focus:bg-[#232323] transition font-medium text-[14px]"
               onClick={() => {}}
             >
-              <Component className="mr-3 flex-shrink-0" size={20} />
+              <Component className="mr-3 flex-shrink-0" size={14} />
               {open && <span>Explore</span>}
             </button>
           </li>
