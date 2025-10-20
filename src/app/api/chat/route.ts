@@ -1,10 +1,9 @@
 import { NextRequest } from "next/server";
 import { createGoogleGenerativeAI } from "@ai-sdk/google";
-import { streamText, generateText } from "ai";
+import { streamText } from "ai";
 import { connectToDatabase } from "@/lib/db";
 import { Memory } from "@/models/Memory";
-import { Message } from "@/models/Message";
-import { env, assertServerEnvForChat, assertServerEnvForDb } from "@/lib/env";
+import { env, assertServerEnvForChat } from "@/lib/env";
 import { trimMessagesToTokenLimit } from "@/lib/tokens";
 
 const google = createGoogleGenerativeAI({ apiKey: env.GOOGLE_API_KEY as string | undefined });
