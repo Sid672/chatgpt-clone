@@ -3,6 +3,9 @@ import { Message } from "@/models/Message";
 import { Memory } from "@/models/Memory";
 import { env } from "@/lib/env";
 
+// Ensure Node.js runtime for MongoDB operations
+export const runtime = "nodejs";
+
 export async function POST(req: Request) {
   try {
     // Validate internal secret header to avoid public abuse

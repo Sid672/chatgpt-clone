@@ -1,5 +1,8 @@
 import { NextResponse } from "next/server";
 
+// Ensure Node.js runtime for consistency
+export const runtime = "nodejs";
+
 export async function PATCH(
 	req: Request,
 	context: { params: Promise<{ id: string }> }

@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Conversation } from "@/models/Conversation";
 
+// Ensure Node.js runtime for MongoDB operations
+export const runtime = "nodejs";
+
 export async function GET() {
   if (!process.env.MONGODB_URI) {
     return NextResponse.json([]);

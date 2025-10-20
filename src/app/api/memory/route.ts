@@ -2,6 +2,9 @@ import { NextRequest, NextResponse } from "next/server";
 import { connectToDatabase } from "@/lib/db";
 import { Memory } from "@/models/Memory";
 
+// Ensure Node.js runtime for MongoDB operations
+export const runtime = "nodejs";
+
 export async function POST(req: NextRequest) {
   if (!process.env.MONGODB_URI) {
     return NextResponse.json({ error: "Persistence disabled" }, { status: 501 });
