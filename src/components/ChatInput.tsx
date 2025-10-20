@@ -1,45 +1,73 @@
 "use client";
-import { useCallback, useRef, useState, useEffect } from "react";
-import { Paperclip, Image as ImageIcon, Lightbulb, Search, BookOpen, MoreHorizontal, Mic, Plus } from "lucide-react";
-import Icon from "@/components/Icon";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import { Plus, Mic, Paperclip, ImageIcon, Lightbulb, Search, BookOpen, MoreHorizontal } from "lucide-react";
 import Dropzone from "react-dropzone";
-import AttachmentPreview from "@/components/AttachmentPreview";
 
-type Props = {
-  onSend: (content: string, attachments: { url: string; type: string }[]) => void;
+interface ChatInputProps {
+  onSend: (content: string, attachments: any[]) => Promise<void>;
   variant?: "hero" | "inline";
-};
+}
 
-export default function ChatInput({ onSend, variant = "inline" }: Props) {
+function useIsInputAtPageBottom(inputRef: React.RefObject<HTMLDivElement | null>) {
+  const [atBottom, setAtBottom] = useState(false);
+  useEffect(() => {
+    function onResizeOrScroll() {
+      if (!inputRef.current) return;
+      const rect = inputRef.current.getBoundingClientRect();
+      setAtBottom(rect.bottom >= window.innerHeight - 16); // tolerance
+    }
+    window.addEventListener('resize', onResizeOrScroll);
+    window.addEventListener('scroll', onResizeOrScroll);
+    onResizeOrScroll();
+    return () => {
+      window.removeEventListener('resize', onResizeOrScroll);
+      window.removeEventListener('scroll', onResizeOrScroll);
+    };
+  }, [inputRef]);
+  return atBottom;
+}
+
+export default function ChatInput({ onSend, variant = "inline" }: ChatInputProps) {
   const [value, setValue] = useState("");
-  const [attachments, setAttachments] = useState<{ url: string; type: string }[]>([]);
-  const isSending = useRef(false);
+  const [attachments, setAttachments] = useState<any[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
-  const menuRef = useRef<HTMLDivElement | null>(null);
+  const menuRef = useRef<HTMLDivElement>(null);
+  const isSending = useRef(false);
+  const inputWrapRef = useRef<HTMLDivElement>(null);
+  const atBottom = useIsInputAtPageBottom(inputWrapRef);
 
   const handleUpload = useCallback(async (file: File) => {
-    const fd = new FormData();
-    fd.append("file", file);
-    const res = await fetch("/api/upload", { method: "POST", body: fd });
-    if (!res.ok) return;
-    const data = await res.json();
-    setAttachments((prev) => [
-      ...prev,
-      { url: data.secure_url, type: data.resource_type || file.type },
-    ]);
+    const formData = new FormData();
+    formData.append("file", file);
+    try {
+      const res = await fetch("/api/upload", { method: "POST", body: formData });
+      const data = await res.json();
+      setAttachments((prev) => [...prev, { type: file.type, url: data.url, name: file.name }]);
+    } catch (error) {
+      console.error("Upload failed:", error);
+    }
   }, []);
 
   const onDrop = useCallback((accepted: File[]) => {
     accepted.forEach((f) => void handleUpload(f));
   }, [handleUpload]);
 
-  const send = useCallback(() => {
+  const send = useCallback(async (e?: React.FormEvent) => {
+    if (e) {
+      e.preventDefault();
+      e.stopPropagation();
+    }
     if (!value.trim() || isSending.current) return;
     isSending.current = true;
-    onSend(value.trim(), attachments);
-    setValue("");
-    setAttachments([]);
-    isSending.current = false;
+    try {
+      await onSend(value.trim(), attachments);
+      setValue("");
+      setAttachments([]);
+    } catch (error) {
+      console.error("Error sending message:", error);
+    } finally {
+      isSending.current = false;
+    }
   }, [value, attachments, onSend]);
 
   useEffect(() => {
@@ -54,98 +82,118 @@ export default function ChatInput({ onSend, variant = "inline" }: Props) {
   const hero = variant === "hero";
 
   return (
-    <div className={hero ? "w-full" : "flex flex-col gap-2 p-2 border-t"}>
+    <div ref={inputWrapRef}
+      className={hero ? "w-full" : "flex flex-col gap-2"}
+    >
       <div className={hero ? "" : "mx-auto w-full"}>
         <div className={hero ? "mt-8" : ""}>
-          <div className="pill-input-wrapper relative">
-            <div className="pill-left relative" ref={menuRef}>
+          <form onSubmit={(e) => { e.preventDefault(); void send(e); }} className="relative w-full">
+            <div
+              className="flex items-center w-full h-12 rounded-2xl px-4"
+              style={{
+                background: '#303030',
+                boxShadow: '0px 1px 8px 0px rgba(0,0,0,0.04)',
+                border: 'none',
+              }}
+            >
               <button
-                className="btn-icon transition hover:brightness-110 hover:shadow-md"
+                className="mr-2 flex-shrink-0 rounded-full hover:bg-[#353535] flex items-center justify-center transition"
+                type="button"
                 onClick={() => setMenuOpen((v) => !v)}
                 aria-label="Open quick actions"
+                tabIndex={-1}
+                style={{ background: 'transparent', border: 'none', padding: '7px' }}
               >
-                <Plus size={18} />
+                <Plus size={14} color="#ccc" />
               </button>
               <input
-                className="input-plain"
+                className="flex-1 bg-transparent outline-none text-white placeholder-gray-400 px-3 py-2"
                 placeholder="Ask anything"
                 value={value}
                 onChange={(e) => setValue(e.target.value)}
                 onKeyDown={(e) => {
                   if (e.key === "Enter" && !e.shiftKey) {
                     e.preventDefault();
-                    send();
+                    void send();
                   }
                 }}
                 aria-label="Chat message input"
-                style={{ width: "100%", fontSize: "16px" }}
+                style={{ fontSize: '14px', color: '#fff', border: 'none', padding: '8px 12px', background: 'transparent' }}
               />
-
-              {menuOpen && (
-                <div
-                  className="absolute left-0 top-[52px] z-20 w-[320px] rounded-2xl border border-[var(--border)] bg-[#1f1f1f] shadow-xl"
-                  role="menu"
-                >
-                  <ul className="py-2">
-                    <li className="px-3">
-                      <Dropzone onDrop={onDrop} multiple>
-                        {({ getRootProps, getInputProps }) => (
-                          <div {...getRootProps()}>
-                            <input {...getInputProps()} />
-                            <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-[#2a2a2a] transition" role="menuitem">
-                              <Paperclip size={14} className="text-white/90" />
-                              <span className="text-[14px]">Add photos & files</span>
-                            </button>
-                          </div>
-                        )}
-                      </Dropzone>
-                    </li>
-
-                    <li className="px-3">
-                      <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-[#2a2a2a] transition" role="menuitem">
-                        <ImageIcon size={14} className="text-white/90" />
-                        <span className="text-[14px]">Create image</span>
-                      </button>
-                    </li>
-
-                    <li className="px-3">
-                      <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-[#2a2a2a] transition" role="menuitem">
-                        <Lightbulb size={14} className="text-white/90" />
-                        <span className="text-[14px]">Thinking</span>
-                      </button>
-                    </li>
-
-                    <li className="px-3">
-                      <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-[#2a2a2a] transition" role="menuitem">
-                        <Search size={14} className="text-white/90" />
-                        <span className="text-[14px]">Deep research</span>
-                      </button>
-                    </li>
-
-                    <li className="px-3">
-                      <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-[#2a2a2a] transition" role="menuitem">
-                        <BookOpen size={14} className="text-white/90" />
-                        <span className="text-[14px]">Study and learn</span>
-                      </button>
-                    </li>
-
-                    <li className="px-3">
-                      <button className="w-full flex items-center justify-between rounded-xl px-3 py-2 hover:bg-[#2a2a2a] transition" role="menuitem">
-                        <span className="flex items-center gap-3"><MoreHorizontal size={14} className="text-white/90" /> <span className="text-[14px]">More</span></span>
-                        <span className="opacity-60 text-[14px]"></span>
-                      </button>
-                    </li>
-                  </ul>
-                </div>
-              )}
-            </div>
-
-            <div className="flex items-center gap-2">
-              <button className="voice-btn transition hover:brightness-110 hover:shadow-md" onClick={send} aria-label="Send">
-                <Mic size={18} />
+              <button
+                className="ml-2 flex-shrink-0 rounded-full hover:bg-[#353535] flex items-center justify-center transition"
+                type="submit"
+                aria-label="Send"
+                style={{ background: 'transparent', border: 'none', padding: '7px' }}
+              >
+                <Mic size={14} color="#fff" />
               </button>
             </div>
-          </div>
+
+            {menuOpen && (
+              <div
+                className={`absolute left-0 ${atBottom ? 'bottom-full mb-2' : 'top-[52px] mt-2'} z-20 w-[320px] rounded-2xl border border-[var(--border)] bg-[#222] shadow-xl`}
+                role="menu"
+                style={{ minWidth: 240 }}
+              >
+                <ul className="py-2">
+                  <li className="px-3">
+                    <Dropzone onDrop={onDrop} multiple>
+                      {({ getRootProps, getInputProps }: any) => (
+                        <div {...getRootProps()}>
+                          <input {...getInputProps()} />
+                          <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-[#262626] transition" role="menuitem">
+                            <Paperclip size={14} className="text-white/90" />
+                            <span className="text-[14px] text-gray-200">Add photos & files</span>
+                          </button>
+                        </div>
+                      )}
+                    </Dropzone>
+                  </li>
+                  <li className="px-3">
+                    <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-[#262626] transition" role="menuitem">
+                      <ImageIcon size={14} className="text-white/90" />
+                      <span className="text-[14px] text-gray-200">Create image</span>
+                    </button>
+                  </li>
+                  <li className="px-3">
+                    <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-[#262626] transition" role="menuitem">
+                      <Lightbulb size={14} className="text-white/90" />
+                      <span className="text-[14px] text-gray-200">Thinking</span>
+                    </button>
+                  </li>
+                  <li className="px-3">
+                    <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-[#262626] transition" role="menuitem">
+                      <Search size={14} className="text-white/90" />
+                      <span className="text-[14px] text-gray-200">Deep research</span>
+                    </button>
+                  </li>
+                  <li className="px-3">
+                    <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-[#262626] transition" role="menuitem">
+                      <BookOpen size={14} className="text-white/90" />
+                      <span className="text-[14px] text-gray-200">Study and learn</span>
+                    </button>
+                  </li>
+                  <li className="px-3">
+                    <button className="w-full flex items-center gap-3 rounded-xl px-3 py-2 hover:bg-[#262626] transition" role="menuitem">
+                      <MoreHorizontal size={14} className="text-white/90" />
+                      <span className="text-[14px] text-gray-200">More</span>
+                    </button>
+                  </li>
+                </ul>
+              </div>
+            )}
+
+            {attachments.length > 0 && (
+              <div className="absolute -top-12 left-0 flex gap-2">
+                {attachments.map((att, i) => (
+                  <div key={i} className="bg-[#2a2a2a] rounded-lg px-2 py-1 text-xs text-white/80">
+                    {att.name}
+                  </div>
+                ))}
+              </div>
+            )}
+          </form>
 
           <AttachmentPreview attachments={attachments} />
         </div>
@@ -154,4 +202,16 @@ export default function ChatInput({ onSend, variant = "inline" }: Props) {
   );
 }
 
-
+function AttachmentPreview({ attachments }: { attachments: any[] }) {
+  if (attachments.length === 0) return null;
+  
+  return (
+    <div className="mt-2 flex flex-wrap gap-2">
+      {attachments.map((att, i) => (
+        <div key={i} className="bg-[#2a2a2a] rounded-lg px-3 py-2 text-sm text-white/80">
+          {att.name}
+        </div>
+      ))}
+    </div>
+  );
+}

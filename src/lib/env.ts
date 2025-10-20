@@ -6,6 +6,7 @@ import { z } from "zod";
 // so local dev without all services doesn't crash at module import time.
 const EnvSchema = z.object({
   OPENAI_API_KEY: z.string().optional(),
+  GOOGLE_API_KEY: z.string().optional(),
   MONGODB_URI: z.string().optional(),
   MONGODB_DB: z.string().optional(),
   CLOUDINARY_CLOUD_NAME: z.string().optional(),
@@ -16,6 +17,7 @@ const EnvSchema = z.object({
 
 const raw = {
   OPENAI_API_KEY: process.env.OPENAI_API_KEY,
+  GOOGLE_API_KEY: process.env.GOOGLE_API_KEY,
   MONGODB_URI: process.env.MONGODB_URI,
   MONGODB_DB: process.env.MONGODB_DB,
   CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
@@ -30,8 +32,8 @@ const parsed = EnvSchema.safeParse(raw);
 export const env = parsed.success ? parsed.data : (raw as z.infer<typeof EnvSchema>);
 
 export function assertServerEnvForChat() {
-  if (!env.OPENAI_API_KEY) {
-    throw new Error("OPENAI_API_KEY is required to use the chat API. Set it in your environment (.env.local).");
+  if (!env.GOOGLE_API_KEY) {
+    throw new Error("GOOGLE_API_KEY is required to use the chat API. Set it in your environment (.env.local).");
   }
 }
 

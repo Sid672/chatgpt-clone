@@ -10,7 +10,10 @@ type Props = {
   setSaveMemory?: (v: boolean) => void;
 };
 
-const MODELS = ["gpt-4o-mini", "gpt-4o", "gpt-4.1-mini"];
+const MODELS = [
+  "gemini-pro",
+  "gemini-pro-vision"
+];
 
 export default function SettingsModal({ open, onClose, model, setModel, saveMemory, setSaveMemory }: Props) {
   useEffect(() => {
