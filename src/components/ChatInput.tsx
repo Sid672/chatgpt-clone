@@ -6,6 +6,7 @@ import Dropzone from "react-dropzone";
 interface ChatInputProps {
   onSend: (content: string, attachments: any[]) => Promise<void>;
   variant?: "hero" | "inline";
+  width?: string;
 }
 
 function useIsInputAtPageBottom(inputRef: React.RefObject<HTMLDivElement | null>) {
@@ -27,7 +28,7 @@ function useIsInputAtPageBottom(inputRef: React.RefObject<HTMLDivElement | null>
   return atBottom;
 }
 
-export default function ChatInput({ onSend, variant = "inline" }: ChatInputProps) {
+export default function ChatInput({ onSend, variant = "inline", width }: ChatInputProps) {
   const [value, setValue] = useState("");
   const [attachments, setAttachments] = useState<any[]>([]);
   const [menuOpen, setMenuOpen] = useState(false);
@@ -84,6 +85,7 @@ export default function ChatInput({ onSend, variant = "inline" }: ChatInputProps
   return (
     <div ref={inputWrapRef}
       className={hero ? "w-full" : "flex flex-col gap-2"}
+      style={width ? { width } : undefined}
     >
       <div className={hero ? "" : "mx-auto w-full"}>
         <div className={hero ? "mt-8" : ""}>

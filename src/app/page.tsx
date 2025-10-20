@@ -196,6 +196,7 @@ export default function Home() {
               <ChatInput 
                 onSend={sendMessage} 
                 variant="hero" 
+                width="40vw"
               />
             </div>
           )}
@@ -204,10 +205,11 @@ export default function Home() {
         {/* Persistent chat input at bottom */}
         {localMessages.length > 0 && (
           <div className="sticky bottom-0 bg-background border-t border-[var(--border)] p-4">
-            <div className="max-w-3xl mx-auto">
+            <div className="mx-auto" style={{ width: "40vw" }}>
               <ChatInput 
                 onSend={sendMessage} 
                 variant="inline" 
+                width="100%"
               />
             </div>
           </div>

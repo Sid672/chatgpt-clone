@@ -1,19 +1,34 @@
-import { NextRequest, NextResponse } from "next/server";
-import { connectToDatabase } from "@/lib/db";
-import { Message } from "@/models/Message";
+import { NextResponse } from "next/server";
 
-type RouteContext = { params: { id: string } } | { params: Promise<{ id: string }> };
+export async function PATCH(
+	req: Request,
+	context: { params: Promise<{ id: string }> }
+) {
+	const { id } = await context.params;
 
-export async function GET(_req: NextRequest, context: RouteContext) {
-  const params = await Promise.resolve(context.params as Promise<{ id: string }> | { id: string });
-  if (!process.env.MONGODB_URI) {
-    return NextResponse.json([]);
-  }
-  await connectToDatabase();
-  const id = params?.id;
-  if (!id) return NextResponse.json([]);
-  const items = await Message.find({ conversationId: id }).sort({ createdAt: 1 }).lean();
-  return NextResponse.json(items.map((m) => ({ role: m.role, content: m.content })));
+	// Parse request body safely
+	let body: { title?: string } = {};
+	try {
+		body = await req.json();
+	} catch {
+		// ignore parse errors — body stays empty
+	}
+
+	const title = body?.title;
+
+	if (!title) {
+		return NextResponse.json({ error: "title required" }, { status: 400 });
+	}
+
+	if (!id) {
+		return NextResponse.json({ error: "missing id" }, { status: 400 });
+	}
+
+	// In a real app, you'd update the conversation title in a DB here.
+	// For now, just echo back the result.
+	return NextResponse.json({
+		id,
+		title,
+		message: "Conversation title updated (mock response)",
+	});
 }
-
-
