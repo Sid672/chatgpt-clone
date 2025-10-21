@@ -10,6 +10,8 @@ const google = createGoogleGenerativeAI({ apiKey: env.GOOGLE_API_KEY as string |
 
 // DISABLE EDGE RUNTIME FOR MONGODB/MONGOOSE. Edge runtime does not support Node.js native modules.
 export const runtime = "nodejs";
+// Ask the platform for a longer execution window (in seconds)
+export const maxDuration = 60;
 
 // Change default and allowed model to ONLY gemini-2.5-flash
 const MODEL_DEFAULT = "gemini-2.5-flash";
