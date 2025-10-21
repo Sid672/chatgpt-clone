@@ -11,7 +11,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="h-full theme-dark">
-      <body className={`${inter.variable} ${mono.variable} antialiased h-full bg-background text-foreground`}>
+      <body className={`${inter.variable} ${mono.variable} antialiased h-full bg-background text-foreground`} suppressHydrationWarning={true}>
         <div className="min-h-full flex flex-col" role="application">
           {children}
         </div>

@@ -21,7 +21,7 @@ export default function MessageBubble({ role, content, isLastUser, onEdit }: Pro
   const [isEditing, setIsEditing] = useState(false);
 
   const handleCopy = () => {
-    if (navigator?.clipboard) {
+    if (typeof navigator !== 'undefined' && navigator?.clipboard) {
       navigator.clipboard.writeText(content);
       setCopied(true);
       setTimeout(() => setCopied(false), 1200);

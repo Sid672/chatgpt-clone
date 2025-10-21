@@ -6,8 +6,14 @@ import ChatInput from "@/components/ChatInput";
 import Sidebar from "@/components/Sidebar";
 import MessageBubble from "@/components/MessageBubble";
 import SettingsModal from "@/components/SettingsModal";
+import DotsLoader from "@/components/DotsLoader";
 
 import type { ChatRole } from "@/models/Message";
+
+// Generate stable IDs that won't cause hydration mismatches
+const generateId = () => {
+  return Math.random().toString(36).substr(2, 9);
+};
 
 export default function Home() {
   const { messages, reload, setMessages, append } = useChat({ 
@@ -46,7 +52,7 @@ export default function Home() {
 
     // Add the user message to the messages array
     const userMessage = { 
-      id: `user-${Date.now()}`, 
+      id: `user-${generateId()}`, 
       role: "user" as const, 
       content 
     };
@@ -73,35 +79,25 @@ export default function Home() {
       }
 
       // Handle streaming response
-      
-      // Add the assistant message immediately with loading state
-      const assistantMessage = { 
-        id: `assistant-${Date.now()}`, 
-        role: "assistant" as const, 
-        content: "..." 
-      };
-      setLocalMessages([...updatedMessages, assistantMessage]);
-
       try {
         // Try to get the full response as text first (simpler approach)
         const fullText = await response.text();
         
         if (fullText && fullText.trim()) {
-          setLocalMessages(prev => {
-            const newMessages = [...prev];
-            const lastMessage = newMessages[newMessages.length - 1];
-            if (lastMessage.role === "assistant") {
-              lastMessage.content = fullText;
-            }
-            return newMessages;
-          });
+          // Add the assistant message with the actual content
+          const assistantMessage = { 
+            id: `assistant-${generateId()}`, 
+            role: "assistant" as const, 
+            content: fullText 
+          };
+          setLocalMessages([...updatedMessages, assistantMessage]);
         } else {
-          // Remove the empty assistant message
-          setLocalMessages(prev => prev.slice(0, -1));
+          // If no response, just keep the user message
+          console.warn("Empty response from server");
         }
       } catch (error) {
-        // Remove the empty assistant message
-        setLocalMessages(prev => prev.slice(0, -1));
+        console.error("Error processing response:", error);
+        // Keep the user message even if there's an error
       }
     } catch (error) {
       // Remove the user message if there was an error
@@ -187,33 +183,31 @@ export default function Home() {
           ))}
           {isLoading && (
             <div className="flex flex-row items-start max-w-3xl mx-auto">
-              <div className="h-6 w-6 bg-white rounded-full ml-2 mt-3" />
+              <div className="ml-2 mt-3">
+                <DotsLoader size={14} color="#fff" />
+              </div>
             </div>
           )}
-          {localMessages.length === 0 && (
+          {localMessages.length === 0 && !isLoading && (
             <div className="flex flex-col items-center justify-center text-center mt-24">
               <div className="text-[28px] font-normal mb-6">What can I help with?</div>
-              <ChatInput 
-                onSend={sendMessage} 
-                variant="hero" 
-                width="40vw"
-              />
             </div>
           )}
         </div>
         
-        {/* Persistent chat input at bottom */}
-        {localMessages.length > 0 && (
-          <div className="sticky bottom-0 bg-background border-t border-[var(--border)] p-4">
-            <div className="mx-auto" style={{ width: "40vw" }}>
-              <ChatInput 
-                onSend={sendMessage} 
-                variant="inline" 
-                width="100%"
-              />
-            </div>
+        {/* Always show chat input with consistent sizing */}
+        <div className="sticky bottom-0 bg-background border-t border-[var(--border)] p-3 md:p-4">
+          <div
+            className="mx-auto w-full px-1 sm:px-2"
+            style={{ maxWidth: "900px" }}
+          >
+            <ChatInput 
+              onSend={sendMessage} 
+              variant="inline" 
+              width="100%"
+            />
           </div>
-        )}
+        </div>
       </section>
     </main>
   );

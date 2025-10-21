@@ -13,17 +13,21 @@ function useIsInputAtPageBottom(inputRef: React.RefObject<HTMLDivElement | null>
   const [atBottom, setAtBottom] = useState(false);
   useEffect(() => {
     function onResizeOrScroll() {
-      if (!inputRef.current) return;
+      if (!inputRef.current || typeof window === 'undefined') return;
       const rect = inputRef.current.getBoundingClientRect();
       setAtBottom(rect.bottom >= window.innerHeight - 16); // tolerance
     }
-    window.addEventListener('resize', onResizeOrScroll);
-    window.addEventListener('scroll', onResizeOrScroll);
-    onResizeOrScroll();
-    return () => {
-      window.removeEventListener('resize', onResizeOrScroll);
-      window.removeEventListener('scroll', onResizeOrScroll);
-    };
+    
+    // Only add event listeners on client side
+    if (typeof window !== 'undefined') {
+      window.addEventListener('resize', onResizeOrScroll);
+      window.addEventListener('scroll', onResizeOrScroll);
+      onResizeOrScroll();
+      return () => {
+        window.removeEventListener('resize', onResizeOrScroll);
+        window.removeEventListener('scroll', onResizeOrScroll);
+      };
+    }
   }, [inputRef]);
   return atBottom;
 }
@@ -61,9 +65,13 @@ export default function ChatInput({ onSend, variant = "inline", width }: ChatInp
     if (!value.trim() || isSending.current) return;
     isSending.current = true;
     try {
-      await onSend(value.trim(), attachments);
+      // Capture current content and attachments, then clear input immediately
+      const contentToSend = value.trim();
+      const attachmentsToSend = attachments;
       setValue("");
       setAttachments([]);
+      setMenuOpen(false);
+      await onSend(contentToSend, attachmentsToSend);
     } catch (error) {
       console.error("Error sending message:", error);
     } finally {
@@ -81,6 +89,8 @@ export default function ChatInput({ onSend, variant = "inline", width }: ChatInp
   }, [menuOpen]);
 
   const hero = variant === "hero";
+  // In bottom (inline) mode we always want the menu to open upwards
+  const openUpwards = variant === "inline" || atBottom;
 
   return (
     <div ref={inputWrapRef}
@@ -134,7 +144,8 @@ export default function ChatInput({ onSend, variant = "inline", width }: ChatInp
 
             {menuOpen && (
               <div
-                className={`absolute left-0 ${atBottom ? 'bottom-full mb-2' : 'top-[52px] mt-2'} z-20 w-[320px] rounded-2xl border border-[var(--border)] bg-[#222] shadow-xl`}
+                ref={menuRef}
+                className={`absolute left-0 ${openUpwards ? 'bottom-full mb-2' : 'top-[52px] mt-2'} z-20 w-[90vw] sm:w-[320px] max-w-[calc(100vw-16px)] rounded-2xl border border-[var(--border)] bg-[#222] shadow-xl max-h-[60vh] overflow-auto`}
                 role="menu"
                 style={{ minWidth: 240 }}
               >

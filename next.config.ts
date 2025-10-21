@@ -9,9 +9,6 @@ const nextConfig: NextConfig = {
     // Disable TypeScript errors during builds
     ignoreBuildErrors: true,
   },
-  experimental: {
-    serverComponentsExternalPackages: ['mongoose']
-  },
   webpack: (config, { isServer }) => {
     if (isServer) {
       config.externals.push('mongoose');
